@@ -1,4 +1,8 @@
-﻿using System;
+﻿//  
+// Copyright 2016 Prajay Basu.
+// Licensed under the Apache License, Version 2.0.  See LICENSE file in the project root for full license information.  
+//
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -13,12 +17,13 @@ namespace OneTimePassword
 	//https://github.com/google/google-authenticator/wiki/Key-Uri-Format
 	public class OneTimePasswordAccount
 	{
-        #region Properties
-        /// <summary>
-        /// Distinguishes between counter based and time based OTP.
-        /// </summary>
-        [JsonConverter(typeof(StringEnumConverter)), JsonProperty(PropertyName = "type")]
-        public AuthenticatorType Type { get; set; } = AuthenticatorType.TOTP;
+		#region Properties
+		/// <summary>
+		/// Type of Authenticator.
+		/// <seealso cref="AuthenticatorType"/>
+		/// </summary>
+		[JsonConverter(typeof(StringEnumConverter)), JsonProperty(PropertyName = "type")]
+		public AuthenticatorType Type { get; set; } = AuthenticatorType.TOTP;
 		/// <summary>
 		/// The name of the account.
 		/// </summary>
@@ -47,13 +52,14 @@ namespace OneTimePassword
 		public TimeSpan Period { get; set; } = TimeSpan.FromSeconds(30);
 
 		/// <summary>
-		///  The algorithm to be used when generating OTP.
+		///  The algorithm to be used when generating the one time password.
+		///  <seealso cref="HashAlgorithmName"/>
 		/// </summary>
 		[JsonProperty(PropertyName = "algorithm")]
 		public HashAlgorithmName Algorithm { get; set; } = HashAlgorithmName.SHA1;
 
 		/// <summary>
-		/// 
+		/// The length of the password.
 		/// </summary>
 		[JsonProperty(PropertyName = "digits")]
 		public int PasswordLength { get; set; } = 6;
@@ -61,11 +67,11 @@ namespace OneTimePassword
 
 		#region Methods
 		/// <summary>
-		/// Generates a password from the given parameters
+		/// Generates a one time password using the given parameters.
 		/// </summary>
 		public OneTimePassword GeneratePassword()
 		{
-            Contract.Requires(Secret != null);
+			Contract.Requires(Secret != null);
 			switch(Type) 
 			{ 
 				case AuthenticatorType.HOTP:
@@ -83,7 +89,14 @@ namespace OneTimePassword
 		#endregion
 
 		#region Constructors
-        public OneTimePasswordAccount() { }
+		/// <summary>
+		/// Creates a new instance of <see cref="OneTimePasswordAccount"/> using the default options.
+		/// </summary>
+		public OneTimePasswordAccount() { }
+		/// <summary>
+		/// Creates a new instance of <see cref="OneTimePasswordAccount"/> from the specified <paramref name="Uri"/> using Google's de facto standard documented <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">here.</a>
+		/// </summary>
+		/// <param name="uri"></param>
 		public OneTimePasswordAccount(Uri uri)
 		{
 			Contract.Requires(uri.Segments.Length > 2);

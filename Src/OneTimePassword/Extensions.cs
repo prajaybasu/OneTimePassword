@@ -1,4 +1,8 @@
-﻿using System;
+﻿//  
+// Copyright 2016 Prajay Basu.
+// Licensed under the Apache License, Version 2.0.  See LICENSE file in the project root for full license information.  
+//
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -8,7 +12,7 @@ namespace OneTimePassword
 {
     public static class Extensions
     {
-        public static HMAC GetHmac(this HashAlgorithmName name)
+        internal static HMAC GetHmac(this HashAlgorithmName name)
         {
             if (name == HashAlgorithmName.MD5)
             {

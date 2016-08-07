@@ -1,11 +1,11 @@
 {
   "name": "OneTimePassword",
-  "copyright": "Prajay Basu 2016"
+  "copyright": "Prajay Basu 2016",
   "version": "1.0.0",
   "language": "en-US",
   "packOptions": {
     "projectUrl": "https://github.com/prajaybasu/OneTimePassword"
-    }
+    },
   "dependencies": {
     "NETStandard.Library": "1.6.0",
     "Newtonsoft.Json": "9.0.1",
