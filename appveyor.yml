@@ -10,7 +10,7 @@ before_build:
 build_script:
 - dotnet build "src\OneTimePassword" -c %CONFIGURATION% --no-dependencies
 after_build:
-- dotnet publish "src\OneTimePassword" -c %CONFIGURATION% --no-build -o "artifacts\OneTimePassword"
+- dotnet pack "src\OneTimePassword" -c %CONFIGURATION% --no-build -o "artifacts\OneTimePassword"
 test_script:
 - dotnet test "test\OneTimePassword.Tests" -c %CONFIGURATION%
 artifacts:
