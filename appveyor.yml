@@ -8,9 +8,9 @@ environment:
 before_build:
 - appveyor-retry dotnet restore -v Minimal
 build_script:
-- dotnet build "src\OneTimePassword" -c %CONFIGURATION% --no-dependencies --version-suffix %LABEL%
+- dotnet build "src\OneTimePassword" -c %CONFIGURATION% --no-dependencies
 after_build:
-- dotnet publish "src\OneTimePassword" -c %CONFIGURATION% --no-build --version-suffix %LABEL% -o artifacts\OneTimePassword
+- dotnet publish "src\OneTimePassword" -c %CONFIGURATION% --no-build-o artifacts\OneTimePassword
 test_script:
 - dotnet test "test\OneTimePassword.Tests" -c %CONFIGURATION%
 artifacts:
