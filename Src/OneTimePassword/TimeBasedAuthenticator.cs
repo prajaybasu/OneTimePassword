@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OneTimePassword
 {
-    public static class TimeBasedAuthenticator
+    public class TimeBasedAuthenticator : Authenticator
     {
         /// <summary>
         /// Generates an one time password based on RFC 6238 using the given parameters.
@@ -24,8 +24,20 @@ namespace OneTimePassword
         /// <returns></returns>
         public static string GeneratePassword(int length, HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan period)
         {
-            Contract.Requires(time.Year >= 1970, "Time before Epoch has undefined behavior");
-            return CounterBasedAuthenticator.GeneratePassword((long) (time.ToUnixTimeSeconds()/period.TotalSeconds), length,hmac,secret);
+            return GenerateFullCode(hmac, secret, time, period).ToTruncatedString(length);
+        }
+        /// <summary>
+        /// Returns the non truncated code.
+        /// </summary>
+        /// <param name="counter">The counter value, as per the RFC document.</param>
+        /// <param name="length">The length of the password to be generated.</param>
+        /// <param name="hmac">The HMAC algorithm to use.</param>
+        /// <param name="secret">The secret in binary encoding.</param>
+        /// <returns></returns>
+        internal static uint GenerateFullCode(HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan period)
+        {
+            Contract.Requires<InvalidOperationException>(time.Year >= 1970, "Time before Epoch has undefined behavior");
+            return CounterBasedAuthenticator.GenerateFullCode((long)(time.ToUnixTimeSeconds() / period.TotalSeconds), hmac, secret);
         }
     }
 }

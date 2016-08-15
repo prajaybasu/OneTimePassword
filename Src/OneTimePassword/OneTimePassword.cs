@@ -19,11 +19,11 @@ namespace OneTimePassword
 		/// The generated password.
 		/// </summary>
 		public string Password { get; internal set; }
-        /// <summary>
-        /// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
-        /// </summary>
-        /// <param name="password">The generated password</param>
-        /// <param name="validUntilUtc">The Time until which it will be valid</param>
+		/// <summary>
+		/// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
+		/// </summary>
+		/// <param name="password">The generated password</param>
+		/// <param name="validUntilUtc">The Time until which it will be valid</param>
 		public OneTimePassword(string password,DateTime validUntilUtc)
 		{
 			Password = password;

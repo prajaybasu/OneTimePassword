@@ -63,6 +63,12 @@ namespace OneTimePassword
 		/// </summary>
 		[JsonProperty(PropertyName = "digits")]
 		public int PasswordLength { get; set; } = 6;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [JsonProperty(PropertyName ="metadata",NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string,string> Metadata { get; set; }
 #endregion
 
 		#region Methods
@@ -191,6 +197,9 @@ namespace OneTimePassword
 		HOTP,
 
 		[EnumMember(Value = "totp")]
-		TOTP
+		TOTP,
+
+		[EnumMember(Value = "steam")]
+		Steam
 	}
 }
