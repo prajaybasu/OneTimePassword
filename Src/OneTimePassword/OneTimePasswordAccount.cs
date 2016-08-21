@@ -27,71 +27,55 @@ namespace OneTimePassword
 		/// <summary>
 		/// The name of the account.
 		/// </summary>
-		[JsonProperty(PropertyName = "label")]
+		[JsonProperty(PropertyName = "label", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
 		public string Label { get; set; }
 		/// <summary>
 		/// Optional. The name of the organization or company the account belongs to.
 		/// </summary>
-		[JsonProperty(PropertyName = "issuer")]
+		[JsonProperty(PropertyName = "issuer", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
 		public string Issuer { get; set; }
 		/// <summary>
 		/// The raw bytes for the account secret used to generate OTP codes.
 		/// </summary>
-		[JsonProperty(PropertyName = "secret")]
+		[JsonProperty(PropertyName = "secret", DefaultValueHandling = DefaultValueHandling.Include)]
 		public byte[] Secret { get; set; }
 		/// <summary>
 		/// It will set the initial counter value when provisioning a key for use with HOTP
 		/// </summary>
-		[JsonProperty(PropertyName = "counter")]
+		[JsonProperty(PropertyName = "counter",DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
 		public long Counter { get; set; } = 0;
 
 		/// <summary>
 		/// It defines the validity of the OTP issued.
 		/// </summary>
-		[JsonProperty(PropertyName = "period")]
+		[JsonProperty(PropertyName = "period", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
 		public TimeSpan Period { get; set; } = TimeSpan.FromSeconds(30);
 
 		/// <summary>
 		///  The algorithm to be used when generating the one time password.
 		///  <seealso cref="HashAlgorithmName"/>
 		/// </summary>
-		[JsonProperty(PropertyName = "algorithm")]
+		[JsonProperty(PropertyName = "algorithm", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
 		public HashAlgorithmName Algorithm { get; set; } = HashAlgorithmName.SHA1;
 
 		/// <summary>
 		/// The length of the password.
 		/// </summary>
-		[JsonProperty(PropertyName = "digits")]
+		[JsonProperty(PropertyName = "digits", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
 		public int PasswordLength { get; set; } = 6;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        [JsonProperty(PropertyName ="metadata",NullValueHandling = NullValueHandling.Ignore)]
-        public Dictionary<string,string> Metadata { get; set; }
-#endregion
+		/// <summary>
+		/// Stores the metadata for the account.
+		/// </summary>
+		[JsonProperty(PropertyName ="metadata", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+		public Dictionary<string,string> Metadata { get; set; }
+		#endregion
 
 		#region Methods
 		/// <summary>
 		/// Generates a one time password using the given parameters.
 		/// </summary>
-		public OneTimePassword GeneratePassword()
-		{
-			Contract.Requires(Secret != null);
-			switch(Type) 
-			{ 
-				case AuthenticatorType.HOTP:
-				{
-					return new OneTimePassword(CounterBasedAuthenticator.GeneratePassword(Counter, PasswordLength, Algorithm.GetHmac(), Secret).ToString(),DateTime.MaxValue);
-				}
-				case AuthenticatorType.TOTP:
-				{
-					return new OneTimePassword(TimeBasedAuthenticator.GeneratePassword(PasswordLength, Algorithm.GetHmac(), Secret, DateTimeOffset.Now, Period).ToString(),DateTime.UtcNow.Add(Period));
-				}
-				default:
-					throw new InvalidOperationException("Authenticator Type not implemented !");
-			}
-		}
+		public OneTimePassword GeneratePassword() => this.GetAuthenticator().GeneratePassword(this);
 		#endregion
 
 		#region Constructors
@@ -103,18 +87,22 @@ namespace OneTimePassword
 		/// Creates a new instance of <see cref="OneTimePasswordAccount"/> from the specified <paramref name="Uri"/> using Google's de facto standard documented <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">here.</a>
 		/// </summary>
 		/// <param name="uri"></param>
-		public OneTimePasswordAccount(Uri uri)
+		public OneTimePasswordAccount(Uri uri,bool setDefaults = true)
 		{
-			Contract.Requires(uri.Segments.Length > 2);
-			Contract.Requires(String.Compare(uri.Scheme, "otpauth", StringComparison.OrdinalIgnoreCase) == 0);
-			Contract.Requires(uri != null);
+			if (uri.Segments.Length < 2) throw new ArgumentOutOfRangeException(nameof(uri), "Invalid Uri.");
+			if (!uri.Scheme.Equals("otpauth", StringComparison.OrdinalIgnoreCase)) throw new ArgumentOutOfRangeException(nameof(uri), "Invalid Uri.");
+			if (uri == null) throw new ArgumentNullException(nameof(uri), "Uri cannot be null.");
+			Contract.EndContractBlock();
 			try
 			{
 				Type = (AuthenticatorType)Enum.Parse(typeof(AuthenticatorType), uri.Authority, true);
 			}
 			catch(Exception ex)
 			{
-				throw new InvalidOperationException("Authenticator not supported", ex);
+				if (!setDefaults)
+				{
+					throw new InvalidOperationException("Authenticator not supported", ex);
+				}
 			}
 			Label = Uri.UnescapeDataString(uri.Segments[1]);
 			if(Label.Contains(':'))
@@ -197,9 +185,6 @@ namespace OneTimePassword
 		HOTP,
 
 		[EnumMember(Value = "totp")]
-		TOTP,
-
-		[EnumMember(Value = "steam")]
-		Steam
+		TOTP
 	}
 }

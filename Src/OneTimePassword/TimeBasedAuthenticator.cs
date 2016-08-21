@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OneTimePassword
 {
-    public class TimeBasedAuthenticator : Authenticator
+    public class TimeBasedAuthenticator : CounterBasedAuthenticator
     {
         /// <summary>
         /// Generates an one time password based on RFC 6238 using the given parameters.
@@ -22,9 +22,23 @@ namespace OneTimePassword
         /// <param name="time">The time to generate the one time password for.</param>
         /// <param name="period">The period of the one time password in seconds.</param>
         /// <returns></returns>
-        public static string GeneratePassword(int length, HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan period)
+        public override OneTimePassword GeneratePassword(OneTimePasswordAccount account)
         {
-            return GenerateFullCode(hmac, secret, time, period).ToTruncatedString(length);
+            return GeneratePassword(account);
+        }
+        /// <summary>
+        /// Generates an one time password based on RFC 6238 using the given parameters.
+        /// </summary>
+        /// <param name="length">The length of the password</param>
+        /// <param name="hmac">The HMAC algorithm to use.</param>
+        /// <param name="secret">The secret in binary encoding.</param>
+        /// <param name="time">The time to generate the one time password for.</param>
+        /// <param name="period">The period of the one time password in seconds.</param>
+        /// <returns></returns>
+        public string GeneratePassword(int length, HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan period)
+        {
+            
+            return TruncatePassword(GenerateFullCode(hmac, secret, time, period),length);
         }
         /// <summary>
         /// Returns the non truncated code.
@@ -36,8 +50,21 @@ namespace OneTimePassword
         /// <returns></returns>
         internal static uint GenerateFullCode(HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan period)
         {
-            Contract.Requires<InvalidOperationException>(time.Year >= 1970, "Time before Epoch has undefined behavior");
+            if (time.Year < 1970) throw new InvalidOperationException("Time before Epoch has undefined behavior");
+            Contract.EndContractBlock();
             return CounterBasedAuthenticator.GenerateFullCode((long)(time.ToUnixTimeSeconds() / period.TotalSeconds), hmac, secret);
         }
-    }
+        #region Hidden members
+        [Obsolete("Use the public implementation.", true)]
+        private new string GeneratePassword(long counter, int length, HMAC hmac, byte[] secret)
+        {
+            throw new NotImplementedException();
+        }
+        [Obsolete("Use the public implementation.", true)]
+        internal new static uint GenerateFullCode(long counter, HMAC hmac, byte[] secret)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+        }
 }

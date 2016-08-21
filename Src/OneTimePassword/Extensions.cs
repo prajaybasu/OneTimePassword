@@ -46,8 +46,9 @@ namespace OneTimePassword
         /// <param name="fullCode"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        internal static string ToTruncatedString(this uint fullCode, int length)
+        internal static string ToOATHTruncatedString(this uint fullCode, int length)
         {
+            if(length < 1)
             Contract.Requires<InvalidOperationException>(length > 0, "Length cannot be less than zero.");
             return (fullCode % Math.Pow(10, length)).ToString().PadLeft(length, '0');
         }
@@ -56,14 +57,14 @@ namespace OneTimePassword
         /// </summary>
         /// <param name="fullCode"></param>
         /// <returns></returns>
-        internal static string ToSteamTruncatedString(this uint fullCode)
+        internal static string ToSteamTruncatedString(this uint fullCode, int length = 5)
         {
             char[] steamAlphanumerics = new char[] { '2', '3', '4', '5', '6', '7', '8', '9', 'B', 'C','D', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q','R', 'T', 'V', 'W', 'X', 'Y' };
             string code = fullCode.ToString();
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < length; i++)
             {
-                code += steamAlphanumerics[fullCode % 5];
-                fullCode /= 5;
+                code += steamAlphanumerics[fullCode % steamAlphanumerics.Length];
+                fullCode /= (uint)steamAlphanumerics.Length;
             }
             return code;
         }
@@ -75,7 +76,7 @@ namespace OneTimePassword
                 client.Timeout = TimeSpan.FromSeconds(2);
                 try
                 {
-                    dynamic content = JObject.Parse(client.PostAsync("https://api.steampowered.com/ITwoFactorService/QueryTime/v0001", null).Result.Content.ToString()); // Oh Valve, the master of RESTful APIs 
+                    dynamic content = JObject.Parse(client.PostAsync("https://api.steampowered.com/ITwoFactorService/QueryTime/v0001", null).Result.Content.ToString()); // Oh Valve, the master of RESTful APIs - post with an empty body to GET the server time..
                     serverTime = DateTimeOffset.FromUnixTimeSeconds(content.response.server_time);
                 }
                 catch(Exception)

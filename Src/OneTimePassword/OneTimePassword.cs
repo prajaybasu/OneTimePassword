@@ -20,6 +20,10 @@ namespace OneTimePassword
 		/// </summary>
 		public string Password { get; internal set; }
 		/// <summary>
+		/// 
+		/// </summary>
+		public long LastCounter { get; internal set; }
+		/// <summary>
 		/// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
 		/// </summary>
 		/// <param name="password">The generated password</param>
