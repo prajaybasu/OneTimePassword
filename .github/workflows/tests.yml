@@ -1,4 +1,4 @@
-name: Test CI
+name: Test Runner
 
 on: [push]
 
@@ -12,7 +12,6 @@ jobs:
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v1
-    - name: Install .NET Core CLI
+    - name: Test with .NET Core CLI
       uses: baruchiro/github-actions@0.0.1
-    - name: Test solution
-      run: dotnet test
+      args: test
