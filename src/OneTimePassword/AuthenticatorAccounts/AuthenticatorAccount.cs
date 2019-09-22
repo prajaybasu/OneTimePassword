@@ -79,7 +79,27 @@ namespace OneTimePassword.AuthenticatorAccounts
         public OneTimePassword GeneratePassword() => Authenticator.GeneratePassword(this);
         #endregion
 
-        #region Constructors
+        #region Functions
+
+
+        /// <summary>
+        /// Creates a new instance of <see cref="OneTimePasswordAccount"/> from the specified <paramref name="Uri"/> using Google's de facto standard documented <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">here.</a>
+        /// </summary>
+        /// <param name="uri"></param>
+        public static bool TryParse(string uri, out AuthenticatorAccount account)
+        {
+            try
+            {
+                account = Parse(new Uri(uri));
+                return true;
+            }
+            catch (Exception)
+            {
+                account = null;
+                return false;
+            }
+        }
+
         /// <summary>
         /// Creates a new instance of <see cref="OneTimePasswordAccount"/> from the specified <paramref name="Uri"/> using Google's de facto standard documented <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">here.</a>
         /// </summary>
