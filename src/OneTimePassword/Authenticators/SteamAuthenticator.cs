@@ -12,10 +12,16 @@ namespace OneTimePassword.Authenticators
     {
         const uint SteamDefaultTimeStep = 30;
         const uint SteamDefaultPasswordLength = 5;
-        public OneTimePassword GeneratePassword(SteamAccount account)
+
+        public new OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
         {
-            return new OneTimePassword(GeneratePassword(account.PasswordLength, HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()), account.Secret, DateTimeOffset.Now, account.Period), DateTimeOffset.Now + account.Period);
+            if (account as SteamAccount is null) throw new ArgumentException("Account is not a Steam account.", nameof(account));
+            using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
+            {
+                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac, account.Secret, time, (account as TimeBasedAuthenticatorAccount).Period));
+            }           
         }
+
         public override string GeneratePassword(uint length, HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan timeStep)
         {
             if (length < 6) throw new ArgumentOutOfRangeException(nameof(length), "The generated password cannot be than shorter 6 characters.");
@@ -23,8 +29,9 @@ namespace OneTimePassword.Authenticators
 
             return this.TruncatePassword(GenerateFullCode(hmac, secret, time, timeStep), length);
         }
+
         /// <summary>
-        /// Returns an alphanumerc string, compatible with Steam Guard.
+        /// Returns an alphanumerc string compatible with Steam Guard.
         /// </summary>
         /// <param name="fullCode"></param>
         /// <returns></returns>

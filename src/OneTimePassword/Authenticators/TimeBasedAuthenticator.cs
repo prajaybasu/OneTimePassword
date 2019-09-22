@@ -10,11 +10,29 @@ namespace OneTimePassword.Authenticators
 {
     public class TimeBasedAuthenticator : CounterBasedAuthenticator
     {
+
         /// <summary>
         /// Generates an one time password based on RFC 6238 using the given parameters.
         /// </summary>
         /// <returns></returns>
-        public override OneTimePassword GeneratePassword(AuthenticatorAccount account) => GeneratePassword(account);
+        public OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
+        {
+            if (account as TimeBasedAuthenticatorAccount is null) throw new ArgumentException("Account is not a TOTP account.", nameof(account));
+            using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
+            {
+                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac, account.Secret, time, (account as TimeBasedAuthenticatorAccount).Period));
+            }
+        }
+
+        /// <summary>
+        /// Generates an one time password based on RFC 6238 using the given parameters.
+        /// </summary>
+        /// <returns></returns>
+        public override OneTimePassword GeneratePassword(AuthenticatorAccount account)
+        {
+            return GeneratePassword(account, DateTimeOffset.Now);
+        }
+
         /// <summary>
         /// Generates an one time password based on RFC 6238 using the given parameters.
         /// </summary>
