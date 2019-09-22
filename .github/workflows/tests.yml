@@ -14,4 +14,4 @@ jobs:
     - uses: actions/checkout@v1
     - name: .NET Core CLI
     - uses: baruchiro/github-actions@0.0.1
-      args: dotnet test
+      run: dotnet test
