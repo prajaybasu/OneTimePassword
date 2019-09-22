@@ -13,6 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Install .NET Core CLI
-    - uses: baruchiro/github-actions@0.0.1
+      uses: baruchiro/github-actions@0.0.1
     - name: Test solution
-    - run: dotnet test
+      run: dotnet test
