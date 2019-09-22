@@ -1,4 +1,4 @@
-# OneTimePassword
+# OneTimePassword ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/OneTimePassword)
 
 RFC 4226 (HOTP) and RFC 6238 (TOTP) implementation for .NET, also supports parsing [Key Uri Format](https://github.com/google/google-authenticator/wiki/Key-Uri-Format) for Google Authenticator Uris and Steam's custom TOTP implementation.
 
@@ -6,7 +6,7 @@ RFC 4226 (HOTP) and RFC 6238 (TOTP) implementation for .NET, also supports parsi
 
 # Installation
 
-To be published on Nuget soon
+```Install-Package OneTimePassword```
 
 # Usage examples
 
