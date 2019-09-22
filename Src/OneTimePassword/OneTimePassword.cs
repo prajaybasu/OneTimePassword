@@ -14,7 +14,7 @@ namespace OneTimePassword
 		/// <summary>
 		/// The time until which the one time password can be used.
 		/// </summary>
-		public DateTime ValidUntilUtc { get; internal set; }
+		public DateTimeOffset? ValidUntil { get; internal set; }
 		/// <summary>
 		/// The generated password.
 		/// </summary>
@@ -28,10 +28,10 @@ namespace OneTimePassword
 		/// </summary>
 		/// <param name="password">The generated password</param>
 		/// <param name="validUntilUtc">The Time until which it will be valid</param>
-		public OneTimePassword(string password,DateTime validUntilUtc)
+		public OneTimePassword(string password, DateTimeOffset? validUntil = null)
 		{
 			Password = password;
-			ValidUntilUtc = validUntilUtc;
+			ValidUntil = validUntil;
 		}
 	}
 }

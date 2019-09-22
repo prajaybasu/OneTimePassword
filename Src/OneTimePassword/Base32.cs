@@ -2,6 +2,7 @@
 // Copyright 2011 Stephen Jennings.
 // Licensed under the Apache License, Version 2.0.  See LICENSE file in the project root for full license information.  
 //
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace OneTimePassword
 {
     public static class Base32Encoding
     {
-        private static readonly char[] Alphabet = new char[]
+        private static readonly char[] base32Table = new char[]
         {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
             'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
@@ -35,7 +36,7 @@ namespace OneTimePassword
             for (int i = 0; i < segments; i++)
             {
                 var segment = data.Skip(i * 5).Take(5).ToArray();
-                result = String.Concat(result, Base32Encoding.ConvertSegmentToBase32(segment));
+                result = String.Concat(result, ConvertSegmentToBase32(segment));
             }
             return result;
         }
@@ -50,7 +51,7 @@ namespace OneTimePassword
         {
             base32 = base32.ToUpper();
 
-            if (base32.Any(c => !Alphabet.Contains(c) && c != Padding))
+            if (base32.Any(c => !base32Table.Contains(c) && c != Padding))
             {
                 throw new ArgumentException("String contains invalid characters.");
             }
@@ -95,7 +96,7 @@ namespace OneTimePassword
             {
                 case 8:
                     resized = true;
-                    result[4] = (byte)(Array.IndexOf(Alphabet, s[6]) << 5 | Array.IndexOf(Alphabet, s[7]));
+                    result[4] = (byte)(Array.IndexOf(base32Table, s[6]) << 5 | Array.IndexOf(base32Table, s[7]));
                     goto case 7;
                 case 7:
                     if (!resized)
@@ -104,7 +105,7 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[3] = (byte)(Array.IndexOf(Alphabet, s[4]) << 7 | Array.IndexOf(Alphabet, s[5]) << 2 | Array.IndexOf(Alphabet, s[6]) >> 3);
+                    result[3] = (byte)(Array.IndexOf(base32Table, s[4]) << 7 | Array.IndexOf(base32Table, s[5]) << 2 | Array.IndexOf(base32Table, s[6]) >> 3);
                     goto case 5;
                 case 5:
                     if (!resized)
@@ -113,7 +114,7 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[2] = (byte)(Array.IndexOf(Alphabet, s[3]) << 4 | Array.IndexOf(Alphabet, s[4]) >> 1);
+                    result[2] = (byte)(Array.IndexOf(base32Table, s[3]) << 4 | Array.IndexOf(base32Table, s[4]) >> 1);
                     goto case 4;
                 case 4:
                     if (!resized)
@@ -122,7 +123,7 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[1] = (byte)(Array.IndexOf(Alphabet, s[1]) << 6 | Array.IndexOf(Alphabet, s[2]) << 1 | Array.IndexOf(Alphabet, s[3]) >> 4);
+                    result[1] = (byte)(Array.IndexOf(base32Table, s[1]) << 6 | Array.IndexOf(base32Table, s[2]) << 1 | Array.IndexOf(base32Table, s[3]) >> 4);
                     goto case 2;
                 case 2:
                     if (!resized)
@@ -131,7 +132,7 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[0] = (byte)(Array.IndexOf(Alphabet, s[0]) << 3 | Array.IndexOf(Alphabet, s[1]) >> 2);
+                    result[0] = (byte)(Array.IndexOf(base32Table, s[0]) << 3 | Array.IndexOf(base32Table, s[1]) >> 2);
                     break;
                 default:
                     throw new ArgumentException("Segment is not a valid 8 character block of base32.");
@@ -165,7 +166,7 @@ namespace OneTimePassword
                 accumulator += (b >> bottomBitsInThisByte) & masks[Math.Min(bitsRemaining, 5)];
 
                 // Add the accumulated character to the result string
-                result = result + Alphabet[accumulator];
+                result = result + base32Table[accumulator];
 
                 if (bottomBitsInThisByte >= 5)
                 {
@@ -175,7 +176,7 @@ namespace OneTimePassword
                     accumulator = (b >> bottomBitsInThisByte) & masks[5];
 
                     // Add the accumulated character to the result string
-                    result = result + Alphabet[accumulator];
+                    result = result + base32Table[accumulator];
                 }
 
                 // Decide how many more bits we need to accumulate from the next byte
@@ -188,7 +189,7 @@ namespace OneTimePassword
             if (bitsRemaining > 0)
             {
                 // Capture the final accumulated value
-                result = result + Alphabet[accumulator];
+                result = result + base32Table[accumulator];
             }
 
             result = result.PadRight(8, Padding);
