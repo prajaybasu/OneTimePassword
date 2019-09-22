@@ -20,7 +20,7 @@ var password = account.GeneratePassword().Password;
 ## From custom parameters
 
 ``` csharp
- using (var hmac = HMAC.Create("HMACSHA1"))
+using (var hmac = HMAC.Create("HMACSHA1"))
 {
     var length = 6;
     var time = DateTimeOffset.Now;
