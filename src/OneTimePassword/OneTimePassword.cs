@@ -11,18 +11,18 @@ namespace OneTimePassword
 {
 	public class OneTimePassword
 	{
-		/// <summary>
-		/// The time until which the one time password can be used.
-		/// </summary>
-		public DateTimeOffset? ValidUntil { get; internal set; }
+        /// <summary>
+        /// The time until which the one time password can be used.
+        /// </summary>
+        public DateTimeOffset? ValidUntil { get; internal set; } = null;
 		/// <summary>
 		/// The generated password.
 		/// </summary>
 		public string Password { get; internal set; }
-		/// <summary>
-		/// 
-		/// </summary>
-		public long LastCounter { get; internal set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte[] LastCounter { get; internal set; } = null;
 		/// <summary>
 		/// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
 		/// </summary>
@@ -33,5 +33,17 @@ namespace OneTimePassword
 			Password = password;
 			ValidUntil = validUntil;
 		}
-	}
+
+        /// <summary>
+        /// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
+        /// </summary>
+        /// <param name="password">The generated password</param>
+        /// <param name="lastCounter">The counter value used for generating the HOTP value. </param>
+        public OneTimePassword(string password, byte[] lastCounter)
+        {
+            Password = password;
+            LastCounter = lastCounter;
+        }
+
+    }
 }

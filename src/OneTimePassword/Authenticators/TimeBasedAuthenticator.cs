@@ -20,7 +20,7 @@ namespace OneTimePassword.Authenticators
             if (account as TimeBasedAuthenticatorAccount is null) throw new ArgumentException("Account is not a TOTP account.", nameof(account));
             using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
             {
-                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac, account.Secret, time, (account as TimeBasedAuthenticatorAccount).Period));
+                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac, account.Secret, time, (account as TimeBasedAuthenticatorAccount).Period), time + (account as TimeBasedAuthenticatorAccount).Period);
             }
         }
 

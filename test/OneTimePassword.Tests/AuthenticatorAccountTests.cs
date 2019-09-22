@@ -72,7 +72,7 @@ namespace OneTimePassword.Tests
                 Query = $"secret={ValidSecretBase32}&counter={BitConverter.ToInt64(ValidCounterValue)}"
             };
             AuthenticatorAccount.TryParse(builder.Uri, out var account);
-
+            
             Assert.Equal(AuthenticatorType.HOTP, account.AuthenticatorType);
             Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
             Assert.Equal(ValidAccountName, account.Name);

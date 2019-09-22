@@ -16,7 +16,7 @@ namespace OneTimePassword.Authenticators
         {
             using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
             {
-                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac , account.Secret, account.Counter));
+                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac , account.Secret, account.Counter), account.Counter);
             }
         }
 
