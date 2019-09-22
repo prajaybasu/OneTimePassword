@@ -69,7 +69,7 @@ namespace OneTimePassword.Tests
                 Scheme = ValidUriScheme,
                 Host = ValidUriHostHotp,
                 Path = ValidAccountName,
-                Query = $"secret={ValidSecretBase32}&countear={BitConverter.ToInt64(ValidCounterValue)}"
+                Query = $"secret={ValidSecretBase32}&counter={BitConverter.ToInt64(ValidCounterValue)}"
             };
             AuthenticatorAccount.TryParse(builder.Uri, out var account);
 
