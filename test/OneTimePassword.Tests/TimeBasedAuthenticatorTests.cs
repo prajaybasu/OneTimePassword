@@ -44,7 +44,7 @@ namespace OneTimePassword.Tests
         {
             using (var hmac = HMAC.Create("HMAC" + hashAlgorithmName.ToUpperInvariant()))
             {
-                Assert.Equal(expectedResult, new TimeBasedAuthenticator().GeneratePassword(8, hmac, Encoding.ASCII.GetBytes(secret), DateTimeOffset.FromUnixTimeSeconds(timestamp), TimeSpan.FromSeconds(30)));
+                Assert.Equal(expectedResult, new TimeBasedAuthenticator().GeneratePassword(hmac, Encoding.ASCII.GetBytes(secret), DateTimeOffset.FromUnixTimeSeconds(timestamp), 8, TimeSpan.FromSeconds(30)));
             }
         }
     }

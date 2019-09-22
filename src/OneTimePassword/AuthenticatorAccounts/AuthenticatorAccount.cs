@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using OneTimePassword.Authenticators;
+using OneTimePassword.Utilities;
 
 namespace OneTimePassword.AuthenticatorAccounts
 {
@@ -170,7 +171,7 @@ namespace OneTimePassword.AuthenticatorAccounts
 
                     case "digits": account.PasswordLength = UInt32.Parse(value); break;
 
-                    case "secret": account.Secret = Base32Encoding.ToBinary(value); break;
+                    case "secret": account.Secret = Base32Encoding.GetBytes(value); break;
 
                     case "issuer": account.Issuer = value; break;
 

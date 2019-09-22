@@ -11,12 +11,23 @@ namespace OneTimePassword.Authenticators
 {
     public class CounterBasedAuthenticator : Authenticator
     {
+        public const uint RFC_DEFAULT_LENGTH = 6;
+
+        public override OneTimePassword GeneratePassword(AuthenticatorAccount account)
+        {
+            var counterAccount = account as CounterBasedAuthenticatorAccount;
+            if (counterAccount == null) throw new ArgumentException("Account is not a HOTP account.", nameof(account));
+            using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
+            {
+                return new OneTimePassword(GeneratePassword( hmac, counterAccount.Secret, counterAccount.Counter, counterAccount.PasswordLength), counterAccount.Counter);
+            }
+        }
 
         public OneTimePassword GeneratePassword(CounterBasedAuthenticatorAccount account)
         {
             using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
             {
-                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac , account.Secret, account.Counter), account.Counter);
+                return new OneTimePassword(GeneratePassword(hmac , account.Secret, account.Counter, account.PasswordLength), account.Counter);
             }
         }
 
@@ -28,7 +39,7 @@ namespace OneTimePassword.Authenticators
         /// <returns></returns>
         public OneTimePassword GeneratePassword(CounterBasedAuthenticatorAccount account, HMAC hmac)
         {
-            return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac, account.Secret, account.Counter));
+            return new OneTimePassword(GeneratePassword(hmac, account.Secret, account.Counter, account.PasswordLength));
         }
 
         /// <summary>
@@ -39,25 +50,24 @@ namespace OneTimePassword.Authenticators
         /// <param name="hmac">The HMAC algorithm to use.</param>
         /// <param name="secret">The secret in binary encoding.</param>
         /// <returns></returns>
-        public virtual string GeneratePassword(uint length, HMAC hmac, byte[] secret, byte[] counter, bool enforceRfcStrict = false)
+        public virtual string GeneratePassword(HMAC hmac, byte[] secret, byte[] counter, uint length = RFC_DEFAULT_LENGTH, bool enforceRfc4226Strict = false)
         {
-            if (hmac.HashName != "SHA1" && enforceRfcStrict) throw new ArgumentException("HMAC Algorithm is not valid as per RFC4226.", nameof(hmac));
-            return TruncatePassword(GenerateFullCode(counter, hmac, secret), length);
+            return TruncatePassword(GenerateFullCode(counter, hmac, secret, enforceRfc4226Strict), length);
         }
 
         /// <summary>
-        /// Generates the full code as per RFC 4226 specifications.
+        /// Generates the full code compliant to the RFC 4226 specification.
         /// </summary>
         /// <param name="counter">The counter value, as per the RFC document.</param>
-        /// <param name="length">The length of the password to be generated.</param>
         /// <param name="hmac">The HMAC algorithm to use.</param>
         /// <param name="secret">The secret in binary encoding.</param>
         /// <returns></returns>
         
-        internal static uint GenerateFullCode(byte[] counter, HMAC hmac, byte[] secret)
+        internal static uint GenerateFullCode(byte[] counter, HMAC hmac, byte[] secret, bool enforceRfc4226Strict = false)
         {
-            //if (counter < 0) throw new ArgumentOutOfRangeException(nameof(counter), "Counter cannot be less than 0.");
-            hmac.Key = secret ?? throw new ArgumentNullException(nameof(secret), "Secret cannot be null.");        
+            if (secret.Length < 16) throw new ArgumentOutOfRangeException(nameof(secret), "The secret cannot be shorter than 128 bits");
+            if (hmac.HashName != "SHA1" && enforceRfc4226Strict) throw new ArgumentException("HMAC Algorithm is not compliant with RFC 4226.", nameof(hmac));
+            hmac.Key = secret ?? throw new ArgumentNullException(nameof(secret), "The secret cannot be null.");        
             var hash = hmac.ComputeHash(ReverseIfLittleEndian(counter));
             var bytes = new byte[4];
             var offset = hash.Last() & 0xF;
@@ -71,16 +81,11 @@ namespace OneTimePassword.Authenticators
             }
         }
 
-        public override OneTimePassword GeneratePassword(AuthenticatorAccount account)
+        internal string TruncatePassword(uint fullCode, uint length = RFC_DEFAULT_LENGTH)
         {
-            if(account is CounterBasedAuthenticatorAccount)
-            {
-                return GeneratePassword(account as CounterBasedAuthenticatorAccount);
-            }
-            else
-            {
-                throw new InvalidOperationException("Account not supported by authenticator.");
-            }
+            if (length < 6 || length > 9) throw new ArgumentOutOfRangeException(nameof(length), "The generated password must be between 6 and 9 characters long.");
+           
+            return (fullCode % Math.Pow(10, length)).ToString().PadLeft((int)length, '0');
         }
     }
 }

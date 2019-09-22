@@ -10,6 +10,7 @@ namespace OneTimePassword.Authenticators
 {
     public class TimeBasedAuthenticator : CounterBasedAuthenticator
     {
+        public const uint RFC_DEFAULT_TIMESTEP = 30;
 
         /// <summary>
         /// Generates an one time password based on RFC 6238 using the given parameters.
@@ -17,10 +18,11 @@ namespace OneTimePassword.Authenticators
         /// <returns></returns>
         public OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
         {
-            if (account as TimeBasedAuthenticatorAccount is null) throw new ArgumentException("Account is not a TOTP account.", nameof(account));
+            var timeAccount = account as TimeBasedAuthenticatorAccount;
+            if (timeAccount == null) throw new ArgumentException("Account is not a TOTP account.", nameof(account));
             using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
             {
-                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac, account.Secret, time, (account as TimeBasedAuthenticatorAccount).Period), time + (account as TimeBasedAuthenticatorAccount).Period);
+                return new OneTimePassword(GeneratePassword(hmac, timeAccount.Secret, time, timeAccount.PasswordLength, timeAccount.Period), time + timeAccount.Period);
             }
         }
 
@@ -42,10 +44,8 @@ namespace OneTimePassword.Authenticators
         /// <param name="time">The time to generate the one time password for.</param>
         /// <param name="timeStep">The period of the one time password in seconds.</param>
         /// <returns></returns>
-        public virtual string GeneratePassword(uint length, HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan timeStep)
-        {      
-            if (length < 6) throw new ArgumentOutOfRangeException(nameof(length), "The generated password cannot be than shorter 6 characters");
-            if (secret.Length < 16) throw new  ArgumentOutOfRangeException(nameof(secret), "The secret cannot be shorter than 128 bits");              
+        public virtual string GeneratePassword(HMAC hmac, byte[] secret, DateTimeOffset time, uint length = RFC_DEFAULT_LENGTH, TimeSpan? timeStep = null)
+        {           
             return TruncatePassword(GenerateFullCode(hmac, secret, time, timeStep), length);
         }
         /// <summary>
@@ -57,12 +57,13 @@ namespace OneTimePassword.Authenticators
         /// <param name="secret">The secret in binary encoding.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentOutOfRangeException">Thrown when <paramref name="time"/> is not valid Unix time.</exception>
-        protected internal uint GenerateFullCode(HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan timeStep)
+        protected internal uint GenerateFullCode(HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan? timeStep = null)
         {
+            if (timeStep == null) timeStep = TimeSpan.FromSeconds(RFC_DEFAULT_TIMESTEP);
             if (time.Year < 1970) throw new ArgumentOutOfRangeException(nameof(time), "Time cannot precede Unix Epoch.");
-            if (timeStep.TotalSeconds < 1) throw new ArgumentOutOfRangeException(nameof(timeStep), "Time step cannot be less than 1 second.");
+            if (timeStep.Value.TotalSeconds < 1) throw new ArgumentOutOfRangeException(nameof(timeStep), "Time step cannot be less than 1 second.");
 
-            return GenerateFullCode(BitConverter.GetBytes((ulong)(time.ToUnixTimeSeconds() / timeStep.TotalSeconds)), hmac, secret);
+            return GenerateFullCode(BitConverter.GetBytes((ulong)(time.ToUnixTimeSeconds() / timeStep.Value.TotalSeconds)), hmac, secret);
         }
     }
 }

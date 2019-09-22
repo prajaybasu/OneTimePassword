@@ -7,11 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OneTimePassword
+namespace OneTimePassword.Utilities
 {
     public static class Base32Encoding
     {
-        private static readonly char[] base32Table = new char[]
+        private static readonly char[] base32Alphabet = new char[]
         {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
             'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
@@ -26,7 +26,7 @@ namespace OneTimePassword
         /// </summary>
         /// <param name="data">The data to convert.</param>
         /// <returns>A base-32 encoded string.</returns>
-        public static string ToBase32(byte[] data)
+        public static string GetString(byte[] data)
         {
             string result = String.Empty;
             var fullSegments = data.Length / 5;
@@ -36,7 +36,7 @@ namespace OneTimePassword
             for (int i = 0; i < segments; i++)
             {
                 var segment = data.Skip(i * 5).Take(5).ToArray();
-                result = String.Concat(result, ConvertSegmentToBase32(segment));
+                result = string.Concat(result, ConvertSegmentGetString(segment));
             }
             return result;
         }
@@ -47,13 +47,13 @@ namespace OneTimePassword
         /// <param name="base32">A base-32 encoded string.</param>
         /// <returns>The data represented by the base-32 string.</returns>
         /// <exception cref="ArgumentException">The argument is not a valid base32-encoded string.</exception>
-        public static byte[] ToBinary(string base32)
+        public static byte[] GetBytes(string base32)
         {
             base32 = base32.ToUpper();
 
-            if (base32.Any(c => !base32Table.Contains(c) && c != Padding))
+            if (base32.Any(c => !base32Alphabet.Contains(c) && c != Padding))
             {
-                throw new ArgumentException("String contains invalid characters.");
+                throw new FormatException("String contains invalid characters.");
             }
 
             var fullSegments = base32.Length / 8;
@@ -65,18 +65,18 @@ namespace OneTimePassword
             for (int i = 0; i < segments; i++)
             {
                 var segment = base32.Skip(i * 8).Take(8).ToArray();
-                var slice = Base32Encoding.ConvertSegmentToBinary(segment);
+                var slice = ConvertSegmentGetBytes(segment);
                 result = result.Concat(slice);
             }
 
             return result.ToArray();
         }
 
-        private static byte[] ConvertSegmentToBinary(char[] segment)
+        private static byte[] ConvertSegmentGetBytes(char[] segment)
         {
             if (segment.Length > 8)
             {
-                throw new ArgumentException("Segment must be no more than 8 characters in length.");
+                throw new FormatException("Segment must be no more than 8 characters in length.");
             }
 
             byte[] result = new byte[5];
@@ -96,7 +96,7 @@ namespace OneTimePassword
             {
                 case 8:
                     resized = true;
-                    result[4] = (byte)(Array.IndexOf(base32Table, s[6]) << 5 | Array.IndexOf(base32Table, s[7]));
+                    result[4] = (byte)(Array.IndexOf(base32Alphabet, s[6]) << 5 | Array.IndexOf(base32Alphabet, s[7]));
                     goto case 7;
                 case 7:
                     if (!resized)
@@ -105,7 +105,7 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[3] = (byte)(Array.IndexOf(base32Table, s[4]) << 7 | Array.IndexOf(base32Table, s[5]) << 2 | Array.IndexOf(base32Table, s[6]) >> 3);
+                    result[3] = (byte)(Array.IndexOf(base32Alphabet, s[4]) << 7 | Array.IndexOf(base32Alphabet, s[5]) << 2 | Array.IndexOf(base32Alphabet, s[6]) >> 3);
                     goto case 5;
                 case 5:
                     if (!resized)
@@ -114,7 +114,7 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[2] = (byte)(Array.IndexOf(base32Table, s[3]) << 4 | Array.IndexOf(base32Table, s[4]) >> 1);
+                    result[2] = (byte)(Array.IndexOf(base32Alphabet, s[3]) << 4 | Array.IndexOf(base32Alphabet, s[4]) >> 1);
                     goto case 4;
                 case 4:
                     if (!resized)
@@ -123,7 +123,7 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[1] = (byte)(Array.IndexOf(base32Table, s[1]) << 6 | Array.IndexOf(base32Table, s[2]) << 1 | Array.IndexOf(base32Table, s[3]) >> 4);
+                    result[1] = (byte)(Array.IndexOf(base32Alphabet, s[1]) << 6 | Array.IndexOf(base32Alphabet, s[2]) << 1 | Array.IndexOf(base32Alphabet, s[3]) >> 4);
                     goto case 2;
                 case 2:
                     if (!resized)
@@ -132,25 +132,25 @@ namespace OneTimePassword
                         resized = true;
                     }
 
-                    result[0] = (byte)(Array.IndexOf(base32Table, s[0]) << 3 | Array.IndexOf(base32Table, s[1]) >> 2);
+                    result[0] = (byte)(Array.IndexOf(base32Alphabet, s[0]) << 3 | Array.IndexOf(base32Alphabet, s[1]) >> 2);
                     break;
                 default:
-                    throw new ArgumentException("Segment is not a valid 8 character block of base32.");
+                    throw new FormatException("Segment is not a valid 8 character block of base32.");
             }
 
             return result;
         }
 
-        private static string ConvertSegmentToBase32(byte[] segment)
+        private static string ConvertSegmentGetString(byte[] segment)
         {
             if (segment.Length == 0)
             {
-                return String.Empty;
+                return string.Empty;
             }
 
             if (segment.Length > 5)
             {
-                throw new ArgumentException("Segment must be five bytes or fewer.");
+                throw new FormatException("Segment must be five bytes or fewer.");
             }
 
             string result = String.Empty;
@@ -166,7 +166,7 @@ namespace OneTimePassword
                 accumulator += (b >> bottomBitsInThisByte) & masks[Math.Min(bitsRemaining, 5)];
 
                 // Add the accumulated character to the result string
-                result = result + base32Table[accumulator];
+                result += base32Alphabet[accumulator];
 
                 if (bottomBitsInThisByte >= 5)
                 {
@@ -176,7 +176,7 @@ namespace OneTimePassword
                     accumulator = (b >> bottomBitsInThisByte) & masks[5];
 
                     // Add the accumulated character to the result string
-                    result = result + base32Table[accumulator];
+                    result += base32Alphabet[accumulator];
                 }
 
                 // Decide how many more bits we need to accumulate from the next byte
@@ -189,7 +189,7 @@ namespace OneTimePassword
             if (bitsRemaining > 0)
             {
                 // Capture the final accumulated value
-                result = result + base32Table[accumulator];
+                result += base32Alphabet[accumulator];
             }
 
             result = result.PadRight(8, Padding);

@@ -11,9 +11,5 @@ namespace OneTimePassword
     {
         public abstract OneTimePassword GeneratePassword(AuthenticatorAccount account);
 
-        internal string TruncatePassword(uint fullCode, uint length) 
-        {
-            return (fullCode % Math.Pow(10, length)).ToString().PadLeft((int) length, '0');
-        }
     }
 }

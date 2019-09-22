@@ -1,5 +1,6 @@
 ﻿using OneTimePassword.AuthenticatorAccounts;
 using OneTimePassword.Authenticators;
+using OneTimePassword.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace OneTimePassword.Tests
         static readonly byte[] DefaultCounterValue = BitConverter.GetBytes(0UL);
         static readonly HashAlgorithmName DefaultHashAlgorithm = HashAlgorithmName.SHA1;
 
-        static readonly byte[] ValidSecretBinary = Base32Encoding.ToBinary(ValidSecretBase32);
+        static readonly byte[] ValidSecretBinary = Base32Encoding.GetBytes(ValidSecretBase32);
         const string ValidSecretBase32 = "CQAHUXJ2VWDI7WFF";
         const string ValidAccountName = "9.99.99.999";
         const string ValidUriScheme = "otpauth";
@@ -77,8 +78,7 @@ namespace OneTimePassword.Tests
             Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
             Assert.Equal(ValidAccountName, account.Name);
             Assert.Equal(ValidSecretBinary, account.Secret);
-            Assert.Equal(ValidCounterValue, (account as CounterBasedAuthenticatorAccount).Counter);
-            
+            Assert.Equal(ValidCounterValue, (account as CounterBasedAuthenticatorAccount).Counter);            
         }
 
         internal static void AssertValidUri(Uri uri)

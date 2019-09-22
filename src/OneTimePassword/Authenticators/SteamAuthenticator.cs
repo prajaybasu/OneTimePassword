@@ -10,23 +10,22 @@ namespace OneTimePassword.Authenticators
 {
     public sealed class SteamAuthenticator : TimeBasedAuthenticator
     {
-        const uint SteamDefaultTimeStep = 30;
-        const uint SteamDefaultPasswordLength = 5;
+        const uint STEAM_DEFAULT_TIMESTEP = 30;
+        const uint STEAM_DEFAULT_LENGTH = 5;
 
         public new OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
         {
-            if (account as SteamAccount is null) throw new ArgumentException("Account is not a Steam account.", nameof(account));
+            var steamAccount = account as SteamAccount;
+            if (steamAccount == null) throw new ArgumentException("Account is not a Steam account.", nameof(account));
             using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
             {
-                return new OneTimePassword(GeneratePassword(account.PasswordLength, hmac, account.Secret, time, (account as TimeBasedAuthenticatorAccount).Period));
+                return new OneTimePassword(GeneratePassword(hmac, steamAccount.Secret, time, steamAccount.PasswordLength, steamAccount.Period));
             }           
         }
 
-        public override string GeneratePassword(uint length, HMAC hmac, byte[] secret, DateTimeOffset time, TimeSpan timeStep)
+        public override string GeneratePassword( HMAC hmac, byte[] secret, DateTimeOffset time, uint length = STEAM_DEFAULT_LENGTH, TimeSpan? timeStep = null)
         {
-            if (length < 6) throw new ArgumentOutOfRangeException(nameof(length), "The generated password cannot be than shorter 6 characters.");
-            if (secret.Length < 16) throw new ArgumentOutOfRangeException(nameof(secret), "The secret cannot be shorter than 128 bits.");
-
+            if (timeStep == null) timeStep = TimeSpan.FromSeconds(STEAM_DEFAULT_TIMESTEP);
             return this.TruncatePassword(GenerateFullCode(hmac, secret, time, timeStep), length);
         }
 
@@ -35,7 +34,7 @@ namespace OneTimePassword.Authenticators
         /// </summary>
         /// <param name="fullCode"></param>
         /// <returns></returns>
-        internal new string TruncatePassword(uint fullCode, uint length = SteamDefaultPasswordLength)
+        internal new string TruncatePassword(uint fullCode, uint length = STEAM_DEFAULT_LENGTH)
         {
             char[] steamAlphanumerics = new char[] { '2', '3', '4', '5', '6', '7', '8', '9', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'R', 'T', 'V', 'W', 'X', 'Y' };
             string code = fullCode.ToString();

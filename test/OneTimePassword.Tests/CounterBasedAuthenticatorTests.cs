@@ -29,9 +29,20 @@ namespace OneTimePassword.Tests
         {
             using (var hmac = HMAC.Create("HMAC" + hashAlgorithmName.ToUpperInvariant()))
             {
-                Assert.Equal(expectedResult, new CounterBasedAuthenticator().GeneratePassword(6, hmac, Encoding.ASCII.GetBytes(secret), BitConverter.GetBytes(counter)));
+                Assert.Equal(expectedResult, new CounterBasedAuthenticator().GeneratePassword(hmac, Encoding.ASCII.GetBytes(secret), BitConverter.GetBytes(counter)));
             }
         }
-
+        
+        [Fact]
+        public static void GeneratePassword_WithInvalidLength_ThrowsArgumentOutOfRangeException()
+        {
+            const string secret = RfcSecretSha1;
+            var counter = 0UL;
+            var length = 5U;
+            using (var hmac = HMAC.Create("HMACSHA1"))
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => new CounterBasedAuthenticator().GeneratePassword(hmac, Encoding.ASCII.GetBytes(secret), BitConverter.GetBytes(counter), length));
+            }
+        }
     }
 }
