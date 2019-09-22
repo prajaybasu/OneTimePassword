@@ -12,6 +12,8 @@ jobs:
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v1
-    - name: Test with .NET Core CLI
-      uses: baruchiro/github-actions@0.0.1
-      args: test
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '2.2.103' # SDK Version to use.
+    - name: Run tests with .NET CLI
+      run: dotnet test
