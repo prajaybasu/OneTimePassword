@@ -108,11 +108,11 @@ namespace OneTimePassword.Tests
             Assert.Throws<FormatException>(() => Base32Encoding.GetBytes("MZX~6YQ="));
         }
 
-        const string Complex1Text = "The Base 32 encoding is designed to represent arbitrary " +
+        private const string Complex1Text = "The Base 32 encoding is designed to represent arbitrary " +
                                             "sequences of octets in a form that needs to be case insensitive " +
                                             "but that need not be human readable.";
 
-        const string Complex1Base32 = "KRUGKICCMFZWKIBTGIQGK3TDN5SGS3THEBUXGIDEMVZWSZ3OMVSCA5DP" +
+        private const string Complex1Base32 = "KRUGKICCMFZWKIBTGIQGK3TDN5SGS3THEBUXGIDEMVZWSZ3OMVSCA5DP" +
                                               "EBZGK4DSMVZWK3TUEBQXEYTJORZGC4TZEBZWK4LVMVXGGZLTEBXWMIDP" +
                                               "MN2GK5DTEBUW4IDBEBTG64TNEB2GQYLUEBXGKZLEOMQHI3ZAMJSSAY3B" +
                                               "ONSSA2LOONSW443JORUXMZJAMJ2XIIDUNBQXIIDOMVSWIIDON52CAYTF" +
@@ -124,7 +124,5 @@ namespace OneTimePassword.Tests
             Assert.Equal(Complex1Base32, Base32Encoding.GetString(Encoding.ASCII.GetBytes(Complex1Text)));
             Assert.Equal(Encoding.ASCII.GetBytes(Complex1Text), Base32Encoding.GetBytes(Complex1Base32));
         }
-
-
     }
 }

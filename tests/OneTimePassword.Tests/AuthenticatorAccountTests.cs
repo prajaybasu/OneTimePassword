@@ -8,22 +8,20 @@ using System.Security.Cryptography;
 using System.Text;
 using Xunit;
 
-
 namespace OneTimePassword.Tests
 {
-    
     public static class AuthenticatorAccountTests
     {
-        static readonly byte[] DefaultCounterValue = BitConverter.GetBytes(0UL);
-        static readonly HashAlgorithmName DefaultHashAlgorithm = HashAlgorithmName.SHA1;
+        private static readonly byte[] DefaultCounterValue = BitConverter.GetBytes(0UL);
+        private static readonly HashAlgorithmName DefaultHashAlgorithm = HashAlgorithmName.SHA1;
 
-        static readonly byte[] ValidSecretBinary = Base32Encoding.GetBytes(ValidSecretBase32);
-        const string ValidSecretBase32 = "CQAHUXJ2VWDI7WFF";
-        const string ValidAccountName = "9.99.99.999";
-        const string ValidUriScheme = "otpauth";
-        const string ValidUriHostTotp = "totp";
-        const string ValidUriHostHotp = "hotp";
-        static readonly byte[] ValidCounterValue = BitConverter.GetBytes(264UL);
+        private static readonly byte[] ValidSecretBinary = Base32Encoding.GetBytes(ValidSecretBase32);
+        private const string ValidSecretBase32 = "CQAHUXJ2VWDI7WFF";
+        private const string ValidAccountName = "9.99.99.999";
+        private const string ValidUriScheme = "otpauth";
+        private const string ValidUriHostTotp = "totp";
+        private const string ValidUriHostHotp = "hotp";
+        private static readonly byte[] ValidCounterValue = BitConverter.GetBytes(264UL);
 
         [Fact]
         public static void ParseValidTotpUri()
@@ -73,12 +71,12 @@ namespace OneTimePassword.Tests
                 Query = $"secret={ValidSecretBase32}&counter={BitConverter.ToInt64(ValidCounterValue)}"
             };
             AuthenticatorAccount.TryParse(builder.Uri, out var account);
-            
+
             Assert.Equal(AuthenticatorType.HOTP, account.AuthenticatorType);
             Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
             Assert.Equal(ValidAccountName, account.Name);
             Assert.Equal(ValidSecretBinary, account.Secret);
-            Assert.Equal(ValidCounterValue, (account as CounterBasedAuthenticatorAccount).Counter);            
+            Assert.Equal(ValidCounterValue, (account as CounterBasedAuthenticatorAccount).Counter);
         }
 
         internal static void AssertValidUri(Uri uri)
@@ -89,11 +87,8 @@ namespace OneTimePassword.Tests
             Assert.Contains("secret=", uri.Query);
             if(uri.Host == "hotp")
             {
-                Assert.True(!String.IsNullOrWhiteSpace(queries.Where(x => x.Contains("counter")).Single().Split('=')[1]));
-                
+                Assert.True(!String.IsNullOrWhiteSpace(queries.Single(x => x.Contains("counter")).Split('=')[1]));
             }
-
         }
-
     }
 }

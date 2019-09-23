@@ -10,15 +10,14 @@ using OneTimePassword.Authenticators;
 
 namespace OneTimePassword.Tests
 {
-    
     /// <summary>
     /// Test vectors taken from https://tools.ietf.org/id/draft-mraihi-totp-timebased-06.html#Section-Test-Vectors
     /// </summary>
     public static class TimeBasedAuthenticatorTests
     {
-        const string RfcSecretSha1 = "12345678901234567890";
-        const string RfcSecretSha256 = "12345678901234567890123456789012";
-        const string RfcSecretSha512 = "1234567890123456789012345678901234567890123456789012345678901234";
+        private const string RfcSecretSha1 = "12345678901234567890";
+        private const string RfcSecretSha256 = "12345678901234567890123456789012";
+        private const string RfcSecretSha512 = "1234567890123456789012345678901234567890123456789012345678901234";
 
         //         Algorithm|     Secret     |  Timestamp | Expected  OTP
         [InlineData(  "SHA1",   RfcSecretSha1,          59, "94287082")]

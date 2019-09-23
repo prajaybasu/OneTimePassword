@@ -82,7 +82,6 @@ namespace OneTimePassword.AuthenticatorAccounts
 
         #region Functions
 
-
         /// <summary>
         /// Creates a new instance of <see cref="OneTimePasswordAccount"/> from the specified <paramref name="Uri"/> using Google's de facto standard documented <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">here.</a>
         /// </summary>
@@ -122,9 +121,11 @@ namespace OneTimePassword.AuthenticatorAccounts
         public static AuthenticatorAccount Parse(Uri uri)
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
-            if (!uri.Scheme.Equals("otpauth", StringComparison.OrdinalIgnoreCase) || uri.Segments.Length < 2 || !uri.Segments.First().Equals("/")) throw new ArgumentException(nameof(uri), "Uri does not follow Google Authenticator format");
-
-            var authenticatorType = (AuthenticatorType)Enum.Parse(typeof(AuthenticatorType), uri.Host, true);
+            if (!uri.Scheme.Equals("otpauth", StringComparison.OrdinalIgnoreCase) || uri.Segments.Length < 2 || !uri.Segments[0].Equals("/")) throw new FormatException("Uri does not follow Google Authenticator format.");
+            if(!Enum.TryParse<AuthenticatorType>(uri.Host, true, out AuthenticatorType authenticatorType))
+            {
+                throw new FormatException("Could not parse authenticator type.");
+            }
             AuthenticatorAccount account;
             switch (authenticatorType)
             {
@@ -167,9 +168,40 @@ namespace OneTimePassword.AuthenticatorAccounts
 
                 switch (key.ToLowerInvariant())
                 {
-                    case "algorithm": account.HashAlgorithm = new HashAlgorithmName(value.ToUpperInvariant()); break;
+                    case "algorithm":
+                        {
+                            account.HashAlgorithm = new HashAlgorithmName(value.ToUpperInvariant());
 
-                    case "digits": account.PasswordLength = UInt32.Parse(value); break;
+                            switch(account.HashAlgorithm.Name)
+                            {
+                                case "SHA1":
+                                case "SHA2":
+                                case "SHA384":
+                                case "SHA512": break;
+                                default: throw new FormatException("Unable to parse the algorithm name.");
+                            }
+
+                            account.HashAlgorithm = new HashAlgorithmName(value.ToUpperInvariant());
+
+                            break;
+                        }
+
+                    case "digits":
+                        {
+                            try
+                            {
+                                account.PasswordLength = uint.Parse(value);
+                                if(account.PasswordLength < CounterBasedAuthenticator.RFC_MINIMUM_PASSWORD_LENGTH || account.PasswordLength > CounterBasedAuthenticator.RFC_MAXIMUM_PASSWORD_LENGTH)
+                                {
+                                    throw new FormatException("Password length must be between 6 and 9.");
+                                }
+                            }
+                            catch(Exception ex)
+                            {
+                                throw new FormatException("Could not parse password length.", ex);
+                            }
+                            break;
+                        }
 
                     case "secret": account.Secret = Base32Encoding.GetBytes(value); break;
 
@@ -177,18 +209,30 @@ namespace OneTimePassword.AuthenticatorAccounts
 
                     case "counter":
                         {
-                            (account as CounterBasedAuthenticatorAccount).Counter = BitConverter.GetBytes(Int64.Parse(value));
+                            if (account is CounterBasedAuthenticatorAccount)
+                            {
+                                (account as CounterBasedAuthenticatorAccount).Counter = BitConverter.GetBytes(long.Parse(value));
+                            }
+                            else
+                            {
+                                throw new FormatException("A valid counter value was provided for a non counter based account.");
+                            }
                             break;
                         }
 
                     case "period":
                         {
-                            (account as TimeBasedAuthenticatorAccount).Period = TimeSpan.FromSeconds(Int64.Parse(value));
+                            if (account is TimeBasedAuthenticatorAccount)
+                            {
+                                (account as TimeBasedAuthenticatorAccount).Period = TimeSpan.FromSeconds(long.Parse(value));
+                            }
+                            else
+                            {
+                                throw new FormatException("A valid time period value was provider for a non time based account.");
+                            }
                             break;
                         }
-
                 }
-
             }
             return account;
         }

@@ -13,6 +13,5 @@ namespace OneTimePassword.AuthenticatorAccounts
         public byte[] Counter { get; set; } = BitConverter.GetBytes(0UL);
 
         public new Authenticator Authenticator => new CounterBasedAuthenticator();
-
     }
 }

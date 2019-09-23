@@ -10,17 +10,16 @@ namespace OneTimePassword.Authenticators
 {
     public sealed class SteamAuthenticator : TimeBasedAuthenticator
     {
-        const uint STEAM_DEFAULT_TIMESTEP = 30;
-        const uint STEAM_DEFAULT_LENGTH = 5;
+        private const uint STEAM_DEFAULT_TIMESTEP = 30;
+        private const uint STEAM_DEFAULT_LENGTH = 5;
 
         public new OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
         {
-            var steamAccount = account as SteamAccount;
-            if (steamAccount == null) throw new ArgumentException("Account is not a Steam account.", nameof(account));
+            if (!(account is SteamAccount steamAccount)) throw new ArgumentException("Account is not a Steam account.", nameof(account));
             using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
             {
                 return new OneTimePassword(GeneratePassword(hmac, steamAccount.Secret, time, steamAccount.PasswordLength, steamAccount.Period));
-            }           
+            }
         }
 
         public override string GeneratePassword( HMAC hmac, byte[] secret, DateTimeOffset time, uint length = STEAM_DEFAULT_LENGTH, TimeSpan? timeStep = null)

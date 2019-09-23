@@ -12,7 +12,7 @@ namespace OneTimePassword.Tests
 {
     public static class CounterBasedAuthenticatorTests
     {
-        const string RfcSecretSha1 = "12345678901234567890";
+        private const string RfcSecretSha1 = "12345678901234567890";
         //       Algorithm|    Secret    |Counter|Expected OTP
         [InlineData("SHA1", RfcSecretSha1,      0, "755224")]
         [InlineData("SHA1", RfcSecretSha1,      1, "287082")]
@@ -32,13 +32,13 @@ namespace OneTimePassword.Tests
                 Assert.Equal(expectedResult, new CounterBasedAuthenticator().GeneratePassword(hmac, Encoding.ASCII.GetBytes(secret), BitConverter.GetBytes(counter)));
             }
         }
-        
+
         [Fact]
         public static void GeneratePassword_WithInvalidLength_ThrowsArgumentOutOfRangeException()
         {
             const string secret = RfcSecretSha1;
-            var counter = 0UL;
-            var length = 5U;
+            const ulong counter = 0UL;
+            const uint length = 5U;
             using (var hmac = HMAC.Create("HMACSHA1"))
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => new CounterBasedAuthenticator().GeneratePassword(hmac, Encoding.ASCII.GetBytes(secret), BitConverter.GetBytes(counter), length));

@@ -10,6 +10,5 @@ namespace OneTimePassword
     public abstract class Authenticator
     {
         public abstract OneTimePassword GeneratePassword(AuthenticatorAccount account);
-
     }
 }

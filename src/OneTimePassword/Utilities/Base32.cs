@@ -19,7 +19,7 @@ namespace OneTimePassword.Utilities
             '6', '7'
         };
 
-        private static readonly char Padding = '=';
+        private const char Padding = '=';
 
         /// <summary>
         ///     Converts a byte array to a base-32 representation.
@@ -60,7 +60,7 @@ namespace OneTimePassword.Utilities
             var finalSegmentLength = base32.Length % 8;
             var segments = fullSegments + (finalSegmentLength == 0 ? 0 : 1);
 
-            IEnumerable<byte> result = new byte[0];
+            IEnumerable<byte> result = Array.Empty<byte>();
 
             for (int i = 0; i < segments; i++)
             {
@@ -192,9 +192,7 @@ namespace OneTimePassword.Utilities
                 result += base32Alphabet[accumulator];
             }
 
-            result = result.PadRight(8, Padding);
-
-            return result;
+            return result.PadRight(8, Padding);
         }
     }
 }

@@ -15,19 +15,22 @@ namespace OneTimePassword
         /// The time until which the one time password can be used.
         /// </summary>
         public DateTimeOffset? ValidUntil { get; internal set; } = null;
+
 		/// <summary>
 		/// The generated password.
 		/// </summary>
 		public string Password { get; internal set; }
+
         /// <summary>
-        /// 
+        /// The last counter value used to generate a password
         /// </summary>
         public byte[] LastCounter { get; internal set; } = null;
+
 		/// <summary>
 		/// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
 		/// </summary>
 		/// <param name="password">The generated password</param>
-		/// <param name="validUntilUtc">The Time until which it will be valid</param>
+		/// <param name="validUntil">The Time until which it will be valid</param>
 		public OneTimePassword(string password, DateTimeOffset? validUntil = null)
 		{
 			Password = password;
@@ -44,6 +47,5 @@ namespace OneTimePassword
             Password = password;
             LastCounter = lastCounter;
         }
-
     }
 }
