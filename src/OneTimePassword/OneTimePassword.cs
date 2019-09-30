@@ -24,14 +24,14 @@ namespace OneTimePassword
         /// <summary>
         /// The last counter value used to generate a password
         /// </summary>
-        public byte[] LastCounter { get; internal set; } = null;
+        public byte[] LastCounter { get; internal set; }
 
-		/// <summary>
-		/// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
-		/// </summary>
-		/// <param name="password">The generated password</param>
-		/// <param name="validUntil">The Time until which it will be valid</param>
-		public OneTimePassword(string password, DateTimeOffset? validUntil = null)
+        /// <summary>
+        /// Initializes an instance of <see cref="OneTimePassword"/> with the specific parameters.
+        /// </summary>
+        /// <param name="password">The generated password</param>
+        /// <param name="validUntil">The Time until which it will be valid</param>
+        public OneTimePassword(string password, DateTimeOffset? validUntil = null)
 		{
 			Password = password;
 			ValidUntil = validUntil;

@@ -3,9 +3,7 @@
 // Licensed under the Apache License, Version 2.0.  See LICENSE file in the project root for full license information.  
 //
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using OneTimePassword.Authenticators;
 using OneTimePassword.Utilities;
@@ -20,7 +18,7 @@ namespace OneTimePassword.AuthenticatorAccounts
         /// <summary>
         /// The name of the account.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
 
         /// <summary>
         /// Type of Authenticator to use for the account.
@@ -31,7 +29,7 @@ namespace OneTimePassword.AuthenticatorAccounts
         /// <summary>
         /// The label of the account.
         /// </summary>
-        public string Label { get => $"{Name}:{Issuer}"; }
+        public string Label { get => String.IsNullOrEmpty(Issuer) ? Name : $"{Issuer}:{Name}"; }
 
         /// <summary>
         /// The name of the organization or company the account belongs to.
@@ -56,7 +54,14 @@ namespace OneTimePassword.AuthenticatorAccounts
 
         #endregion
 
-        #region Methods
+        protected AuthenticatorAccount ()
+        {
+            Secret = new byte[20];
+            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(Secret, 0, 20); // RFC 4226 Section 4 recommends 160 bits shared secret
+            }
+        }
 
         public virtual Authenticator Authenticator
         {
@@ -66,8 +71,8 @@ namespace OneTimePassword.AuthenticatorAccounts
                 {
                     case AuthenticatorType.HOTP:
                         return new CounterBasedAuthenticator();
-                    case AuthenticatorType.TOTP:
-                        return new TimeBasedAuthenticator();
+                    case AuthenticatorType.Steam:
+                        return new SteamAuthenticator();
                     default:
                         return new TimeBasedAuthenticator();
                 }
@@ -78,9 +83,6 @@ namespace OneTimePassword.AuthenticatorAccounts
         /// Generates a one time password using the given parameters.
         /// </summary>
         public OneTimePassword GeneratePassword() => Authenticator.GeneratePassword(this);
-        #endregion
-
-        #region Functions
 
         /// <summary>
         /// Creates a new instance of <see cref="OneTimePasswordAccount"/> from the specified <paramref name="Uri"/> using Google's de facto standard documented <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">here.</a>
@@ -117,6 +119,8 @@ namespace OneTimePassword.AuthenticatorAccounts
                 return false;
             }
         }
+
+        public static AuthenticatorAccount Parse(string uri) => Parse(new Uri(uri));
 
         public static AuthenticatorAccount Parse(Uri uri)
         {
@@ -159,8 +163,7 @@ namespace OneTimePassword.AuthenticatorAccounts
                 account.Name = label;
             }
 
-            var queries = uri.Query.Substring(1).Split('&');
-            foreach (var query in queries)
+            foreach (var query in uri.Query.Substring(1).Split('&'))
             {
                 var queryPair = query.Split('=');
                 var key = Uri.UnescapeDataString(queryPair[0]);
@@ -170,19 +173,16 @@ namespace OneTimePassword.AuthenticatorAccounts
                 {
                     case "algorithm":
                         {
-                            account.HashAlgorithm = new HashAlgorithmName(value.ToUpperInvariant());
-
-                            switch(account.HashAlgorithm.Name)
+                            if (string.Equals(value, "SHA2", StringComparison.InvariantCultureIgnoreCase)) value = "SHA256";
+                            switch (value)
                             {
                                 case "SHA1":
-                                case "SHA2":
+                                case "SHA256":
                                 case "SHA384":
                                 case "SHA512": break;
                                 default: throw new FormatException("Unable to parse the algorithm name.");
                             }
-
                             account.HashAlgorithm = new HashAlgorithmName(value.ToUpperInvariant());
-
                             break;
                         }
 
@@ -190,11 +190,12 @@ namespace OneTimePassword.AuthenticatorAccounts
                         {
                             try
                             {
-                                account.PasswordLength = uint.Parse(value);
-                                if(account.PasswordLength < CounterBasedAuthenticator.RFC_MINIMUM_PASSWORD_LENGTH || account.PasswordLength > CounterBasedAuthenticator.RFC_MAXIMUM_PASSWORD_LENGTH)
+                                var passwordLength = uint.Parse(value);
+                                if(passwordLength < CounterBasedAuthenticator.RFC_MINIMUM_PASSWORD_LENGTH || passwordLength > CounterBasedAuthenticator.RFC_MAXIMUM_PASSWORD_LENGTH)
                                 {
-                                    throw new FormatException("Password length must be between 6 and 9.");
+                                    throw new FormatException("Password length must be between or equal to 6 and 9.");
                                 }
+                                account.PasswordLength = passwordLength;
                             }
                             catch(Exception ex)
                             {
@@ -205,7 +206,7 @@ namespace OneTimePassword.AuthenticatorAccounts
 
                     case "secret": account.Secret = Base32Encoding.GetBytes(value); break;
 
-                    case "issuer": account.Issuer = value; break;
+                    case "issuer": account.Issuer = Uri.UnescapeDataString(value); break;
 
                     case "counter":
                         {
@@ -236,6 +237,6 @@ namespace OneTimePassword.AuthenticatorAccounts
             }
             return account;
         }
-        #endregion
+
     }
 }

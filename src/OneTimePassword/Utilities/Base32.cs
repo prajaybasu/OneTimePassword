@@ -28,6 +28,7 @@ namespace OneTimePassword.Utilities
         /// <returns>A base-32 encoded string.</returns>
         public static string GetString(byte[] data)
         {
+            if (data == null) throw new ArgumentNullException(nameof(data));
             string result = String.Empty;
             var fullSegments = data.Length / 5;
             var finalSegmentLength = data.Length % 5;
@@ -49,6 +50,8 @@ namespace OneTimePassword.Utilities
         /// <exception cref="ArgumentException">The argument is not a valid base32-encoded string.</exception>
         public static byte[] GetBytes(string base32)
         {
+            if (base32 == null) throw new ArgumentNullException(nameof(base32));
+
             base32 = base32.ToUpper();
 
             if (base32.Any(c => !base32Alphabet.Contains(c) && c != Padding))

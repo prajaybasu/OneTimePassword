@@ -36,12 +36,11 @@ namespace OneTimePassword.Tests
         [Fact]
         public static void GeneratePassword_WithInvalidLength_ThrowsArgumentOutOfRangeException()
         {
-            const string secret = RfcSecretSha1;
             const ulong counter = 0UL;
             const uint length = 5U;
             using (var hmac = HMAC.Create("HMACSHA1"))
             {
-                Assert.Throws<ArgumentOutOfRangeException>(() => new CounterBasedAuthenticator().GeneratePassword(hmac, Encoding.ASCII.GetBytes(secret), BitConverter.GetBytes(counter), length));
+                Assert.Throws<ArgumentOutOfRangeException>(() => new CounterBasedAuthenticator().GeneratePassword(hmac, Encoding.ASCII.GetBytes(RfcSecretSha1), BitConverter.GetBytes(counter), length));
             }
         }
     }

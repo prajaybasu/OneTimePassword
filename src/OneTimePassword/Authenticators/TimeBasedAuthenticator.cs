@@ -16,6 +16,7 @@ namespace OneTimePassword.Authenticators
         /// Generates an one time password based on RFC 6238 using the given parameters.
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
         {
             if (!(account is TimeBasedAuthenticatorAccount timeAccount)) throw new ArgumentException("Account is not a TOTP account.", nameof(account));
@@ -42,7 +43,7 @@ namespace OneTimePassword.Authenticators
         /// <param name="time">The time to generate the one time password for.</param>
         /// <param name="length">The length of the password</param>
         /// <param name="timeStep">The period of the one time password in seconds.</param>
-        /// <returns></returns>
+        /// <returns cref="string">The generated password</returns>
         public virtual string GeneratePassword(HMAC hmac, byte[] secret, DateTimeOffset time, uint length = RFC_DEFAULT_LENGTH, TimeSpan? timeStep = null)
         {
             return TruncatePassword(GenerateFullCode(hmac, secret, time, timeStep), length);

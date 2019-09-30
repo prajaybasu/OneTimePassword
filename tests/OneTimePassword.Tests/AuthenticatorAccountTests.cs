@@ -33,6 +33,8 @@ namespace OneTimePassword.Tests
                 Path = ValidAccountName,
                 Query = $"secret={ValidSecretBase32}"
             };
+
+            Assert.Equal("otpauth://totp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF", builder.Uri.ToString());
             AuthenticatorAccount.TryParse(builder.Uri, out var account);
 
             Assert.Equal(AuthenticatorType.TOTP, account.AuthenticatorType);
@@ -42,7 +44,47 @@ namespace OneTimePassword.Tests
         }
 
         [Fact]
-        public static void ParseValidHotpUriWithoutCounter()
+        public static void ParseValidTotpUriWithSha2Algorithm()
+        {
+            var builder = new UriBuilder
+            {
+                Scheme = ValidUriScheme,
+                Host = ValidUriHostTotp,
+                Path = ValidAccountName,
+                Query = $"secret={ValidSecretBase32}&algorithm=sha2"
+            };
+
+            Assert.Equal("otpauth://totp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF&algorithm=sha2", builder.Uri.ToString());
+            var account = AuthenticatorAccount.Parse(builder.Uri);
+
+            Assert.Equal(AuthenticatorType.TOTP, account.AuthenticatorType);
+            Assert.Equal(HashAlgorithmName.SHA256, account.HashAlgorithm);
+            Assert.Equal(ValidAccountName, account.Name);
+            Assert.Equal(ValidSecretBinary, account.Secret);
+        }
+
+        [Fact]
+        public static void ParseValidHotpUriWithSha2Algorithm()
+        {
+            var builder = new UriBuilder
+            {
+                Scheme = ValidUriScheme,
+                Host = ValidUriHostHotp,
+                Path = ValidAccountName,
+                Query = $"secret={ValidSecretBase32}&algorithm=sha2"
+            };
+
+            Assert.Equal("otpauth://hotp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF&algorithm=sha2", builder.Uri.ToString());
+            var account = AuthenticatorAccount.Parse(builder.Uri);
+
+            Assert.Equal(AuthenticatorType.HOTP, account.AuthenticatorType);
+            Assert.Equal(HashAlgorithmName.SHA256, account.HashAlgorithm);
+            Assert.Equal(ValidAccountName, account.Name);
+            Assert.Equal(ValidSecretBinary, account.Secret);
+        }
+
+        [Fact]
+        public static void ParseValidHotpUri()
         {
             var builder = new UriBuilder
             {
@@ -51,7 +93,9 @@ namespace OneTimePassword.Tests
                 Path = ValidAccountName,
                 Query = $"secret={ValidSecretBase32}"
             };
-            AuthenticatorAccount.TryParse(builder.Uri, out var account);
+
+            Assert.Equal("otpauth://hotp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF", builder.Uri.ToString());
+            var account = AuthenticatorAccount.Parse(builder.Uri);
 
             Assert.Equal(AuthenticatorType.HOTP, account.AuthenticatorType);
             Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
@@ -70,13 +114,100 @@ namespace OneTimePassword.Tests
                 Path = ValidAccountName,
                 Query = $"secret={ValidSecretBase32}&counter={BitConverter.ToInt64(ValidCounterValue)}"
             };
-            AuthenticatorAccount.TryParse(builder.Uri, out var account);
+
+            Assert.Equal("otpauth://hotp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF&counter=264", builder.Uri.ToString());
+            var account = AuthenticatorAccount.Parse(builder.Uri);
 
             Assert.Equal(AuthenticatorType.HOTP, account.AuthenticatorType);
             Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
             Assert.Equal(ValidAccountName, account.Name);
             Assert.Equal(ValidSecretBinary, account.Secret);
             Assert.Equal(ValidCounterValue, (account as CounterBasedAuthenticatorAccount).Counter);
+        }
+
+        [Fact]
+        public static void ParseHotpUriInvalidAlgorithmThrowsFormatException()
+        {
+            var builder = new UriBuilder
+            {
+                Scheme = ValidUriScheme,
+                Host = ValidUriHostHotp,
+                Path = ValidAccountName,
+                Query = $"secret={ValidSecretBase32}&algorithm=sha9"
+            };
+
+            Assert.Equal("otpauth://hotp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF&algorithm=sha9", builder.Uri.ToString());
+            Assert.Throws<FormatException>(() => AuthenticatorAccount.Parse(builder.Uri));
+        }
+
+        [Fact]
+        public static void ParseTotpUriInvalidAlgorithmThrowsFormatException()
+        {
+            var builder = new UriBuilder
+            {
+                Scheme = ValidUriScheme,
+                Host = ValidUriHostTotp,
+                Path = ValidAccountName,
+                Query = $"secret={ValidSecretBase32}&algorithm=sha132"
+            };
+
+            Assert.Equal("otpauth://totp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF&algorithm=sha132", builder.Uri.ToString());
+            Assert.Throws<FormatException>(() => AuthenticatorAccount.Parse(builder.Uri));
+        }
+
+        [Fact]
+        public static void ParseTotpUriWithShortPasswordLengthThrowsFormatException()
+        {
+            var builder = new UriBuilder
+            {
+                Scheme = ValidUriScheme,
+                Host = ValidUriHostTotp,
+                Path = ValidAccountName,
+                Query = $"secret={ValidSecretBase32}&digits=5"
+            };
+
+            Assert.Equal("otpauth://totp/9.99.99.999?secret=CQAHUXJ2VWDI7WFF&digits=5", builder.Uri.ToString());
+            Assert.Throws<FormatException>(() => AuthenticatorAccount.Parse(builder.Uri));
+        }
+
+        [Fact]
+        public static void ParseValidGoogleAuthenticatorUriWithOptionalParameters()
+        {
+            var account = AuthenticatorAccount.Parse("otpauth://totp/ACME%20Co:john.doe@email.com?secret=HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ&issuer=ACME%20Co&algorithm=SHA1&digits=6&period=30");
+           
+
+            Assert.Equal(AuthenticatorType.TOTP, account.AuthenticatorType);
+            Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
+            Assert.Equal("john.doe@email.com", account.Name);
+            Assert.Equal("ACME Co", account.Issuer);
+            Assert.Equal(Base32Encoding.GetBytes("HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ"), account.Secret);
+        }
+
+
+        [Fact]
+        public static void ParseValidGoogleAuthenticatorUri()
+        {
+            byte[] secret = { (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)'!',
+                0xDE, 0xAD, 0xBE, 0xEF };
+            var account = AuthenticatorAccount.Parse("otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example");
+
+            Assert.Equal(AuthenticatorType.TOTP, account.AuthenticatorType);
+            Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
+            Assert.Equal("alice@google.com", account.Name);
+            Assert.Equal(secret, account.Secret);
+        }
+
+        [Fact]
+        public static void ParseValidTotpUriWithIgnoredParameters()
+        {
+            byte[] secret = { (byte)'H', (byte)'e', (byte)'l', (byte)'l', (byte)'o', (byte)'!',
+                0xDE, 0xAD, 0xBE, 0xEF };
+            var account = AuthenticatorAccount.Parse("otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example&lmirequesttoken=90_E3463hawd39zikKSgDlgcb56435645y6hrtsdfawefawerea754_23q54w432554&lmiversion=1");
+
+            Assert.Equal(AuthenticatorType.TOTP, account.AuthenticatorType);
+            Assert.Equal(DefaultHashAlgorithm, account.HashAlgorithm);
+            Assert.Equal("alice@google.com", account.Name);
+            Assert.Equal(secret, account.Secret);
         }
 
         internal static void AssertValidUri(Uri uri)
