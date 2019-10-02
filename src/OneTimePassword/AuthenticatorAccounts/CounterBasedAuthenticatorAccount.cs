@@ -16,7 +16,8 @@ namespace OneTimePassword.AuthenticatorAccounts
         public override string ToString()
         {
             var digits = (PasswordLength == 6) ? "" : "&digits=6";
-            var algorithm = (HashAlgorithm.Name == "SHA1") ? "" : $"&algorithm ={ HashAlgorithm.Name.ToLower()}";
+            var algorithm = (HashAlgorithm.Name == "SHA1") ? "" : $"&algorithm={HashAlgorithm.Name.ToLower()}";
+            algorithm = algorithm.Replace("sha256", "sha2");
             var counter = (BitConverter.ToUInt64(Counter, 0) == 0UL) ? "" : $"&counter={BitConverter.ToUInt64(Counter, 0)}";
             var issuer = (string.IsNullOrEmpty(Issuer)) ? "" : $"&issuer={Uri.UnescapeDataString(Issuer)}";
             return $"otpauth://hotp/{Uri.EscapeDataString(Label)}?secret={Base32Encoding.GetString(Secret)}{counter}{digits}{algorithm}{issuer}";

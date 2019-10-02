@@ -210,6 +210,61 @@ namespace OneTimePassword.Tests
             Assert.Equal(secret, account.Secret);
         }
 
+        [Fact]
+        public static void ToStringTimeBasedAuthenticatorAccount()
+        {
+            var uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example";
+            var account = new TimeBasedAuthenticatorAccount()
+            {
+                Secret = Base32Encoding.GetBytes("JBSWY3DPEHPK3PXP"),
+                Issuer = "Example",
+                Name = "alice@google.com"
+            };
+            Assert.Equal(uri, account.ToString());
+        }
+
+        [Fact]
+        public static void ToStringTimeBasedAuthenticatorAccountWithSha256()
+        {
+            var uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&algorithm=sha2&issuer=Example";
+            var account = new TimeBasedAuthenticatorAccount()
+            {
+                Secret = Base32Encoding.GetBytes("JBSWY3DPEHPK3PXP"),
+                Issuer = "Example",
+                Name = "alice@google.com",
+                HashAlgorithm = HashAlgorithmName.SHA256
+            };
+            Assert.Equal(uri, account.ToString());
+        }
+
+        [Fact]
+        public static void ToStringTimeBasedAuthenticatorAccountWithSha512()
+        {
+            var uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&algorithm=sha512&issuer=Example";
+            var account = new TimeBasedAuthenticatorAccount()
+            {
+                Secret = Base32Encoding.GetBytes("JBSWY3DPEHPK3PXP"),
+                Issuer = "Example",
+                Name = "alice@google.com",
+                HashAlgorithm = HashAlgorithmName.SHA512
+            };
+            Assert.Equal(uri, account.ToString());
+        }
+
+        [Fact]
+        public static void ToStringTimeBasedAuthenticatorAccountWith60SecondPeriod()
+        {
+            var uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&period=60&issuer=Example";
+            var account = new TimeBasedAuthenticatorAccount()
+            {
+                Secret = Base32Encoding.GetBytes("JBSWY3DPEHPK3PXP"),
+                Issuer = "Example",
+                Name = "alice@google.com",
+                Period = TimeSpan.FromSeconds(60)
+            };
+            Assert.Equal(uri, account.ToString());
+        }
+
         internal static void AssertValidUri(Uri uri)
         {
             var queries = uri.Query.Substring(1).Split('&');
@@ -218,7 +273,7 @@ namespace OneTimePassword.Tests
             Assert.Contains("secret=", uri.Query);
             if(uri.Host == "hotp")
             {
-                Assert.True(!String.IsNullOrWhiteSpace(queries.Single(x => x.Contains("counter")).Split('=')[1]));
+                Assert.True(!string.IsNullOrWhiteSpace(queries.Single(x => x.Contains("counter")).Split('=')[1]));
             }
         }
     }
