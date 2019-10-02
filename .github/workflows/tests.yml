@@ -12,8 +12,5 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
     - uses: actions/checkout@v1
-    - uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: '3.0.100' # SDK Version to use.
     - name: Run tests with .NET CLI
       run: dotnet test
