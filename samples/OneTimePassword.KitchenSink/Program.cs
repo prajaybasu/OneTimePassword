@@ -10,7 +10,8 @@ namespace OneTimePassword.KitchenSink
         {
             Console.WriteLine(new TimeBasedAuthenticatorAccount() { Name = "OneTimePassword" });
             Console.WriteLine(new CounterBasedAuthenticatorAccount() { Name = "OneTimePassword" });
-            Console.WriteLine(new SteamAccount() { Name = "OneTimePassword"});
+            var steam = new SteamAccount() { Name = "OneTimePassword" };
+            Console.WriteLine(steam.GeneratePassword().Password);
 
         }
     }

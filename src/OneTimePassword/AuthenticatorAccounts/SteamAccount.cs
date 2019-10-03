@@ -11,6 +11,12 @@ namespace OneTimePassword.AuthenticatorAccounts
         {
             Issuer = "Steam";
         }
+
         public new Authenticator Authenticator => new SteamAuthenticator();
+
+        /// <summary>
+        /// Generates a one time password using the given parameters.
+        /// </summary>
+        new public OneTimePassword GeneratePassword() => (Authenticator as SteamAuthenticator).GeneratePassword(this);
     }
 }

@@ -13,8 +13,25 @@ namespace OneTimePassword.Authenticators
         private const uint STEAM_DEFAULT_TIMESTEP = 30;
         private const uint STEAM_DEFAULT_LENGTH = 5;
 
-        public new OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
+        public OneTimePassword GeneratePassword(SteamAccount account)
         {
+            using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
+            {
+                return new OneTimePassword(GeneratePassword(hmac, account.Secret, DateTimeOffset.Now, account.PasswordLength, account.Period));
+            }
+        }
+
+        public new OneTimePassword GeneratePassword(AuthenticatorAccount account)
+        {
+            if (!(account is SteamAccount steamAccount)) throw new ArgumentException("Account is not a Steam account.", nameof(account));
+            using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
+            {
+                return new OneTimePassword(GeneratePassword(hmac, steamAccount.Secret, DateTimeOffset.Now, steamAccount.PasswordLength, steamAccount.Period));
+            }
+        }
+
+        public new OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
+        {          
             if (!(account is SteamAccount steamAccount)) throw new ArgumentException("Account is not a Steam account.", nameof(account));
             using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
             {
@@ -36,7 +53,7 @@ namespace OneTimePassword.Authenticators
         internal new string TruncatePassword(uint fullCode, uint length = STEAM_DEFAULT_LENGTH)
         {
             char[] steamAlphanumerics = new char[] { '2', '3', '4', '5', '6', '7', '8', '9', 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'R', 'T', 'V', 'W', 'X', 'Y' };
-            string code = fullCode.ToString();
+            string code = string.Empty;
             for (var i = 0; i < length; i++)
             {
                 code += steamAlphanumerics[fullCode % steamAlphanumerics.Length];

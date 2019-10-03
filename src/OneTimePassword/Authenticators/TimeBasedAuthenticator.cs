@@ -17,6 +17,33 @@ namespace OneTimePassword.Authenticators
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
+        public OneTimePassword GeneratePassword(TimeBasedAuthenticatorAccount account)
+        {
+            var time = DateTimeOffset.Now;
+            using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
+            {
+                return new OneTimePassword(GeneratePassword(hmac, account.Secret, time, account.PasswordLength, account.Period), time + account.Period);
+            }
+        }
+
+        /// <summary>
+        /// Generates an one time password based on RFC 6238 using the given parameters.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public OneTimePassword GeneratePassword(TimeBasedAuthenticatorAccount account, DateTimeOffset time)
+        {
+            using (var hmac = HMAC.Create("HMAC" + account.HashAlgorithm.Name.ToUpperInvariant()))
+            {
+                return new OneTimePassword(GeneratePassword(hmac, account.Secret, time, account.PasswordLength, account.Period), time + account.Period);
+            }
+        }
+
+        /// <summary>
+        /// Generates an one time password based on RFC 6238 using the given parameters.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public OneTimePassword GeneratePassword(AuthenticatorAccount account, DateTimeOffset time)
         {
             if (!(account is TimeBasedAuthenticatorAccount timeAccount)) throw new ArgumentException("Account is not a TOTP account.", nameof(account));

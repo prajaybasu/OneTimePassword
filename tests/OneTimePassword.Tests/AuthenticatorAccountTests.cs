@@ -23,6 +23,67 @@ namespace OneTimePassword.Tests
         private const string ValidUriHostHotp = "hotp";
         private static readonly byte[] ValidCounterValue = BitConverter.GetBytes(264UL);
 
+
+        private const string RfcSecretSha1 = "12345678901234567890";
+        private const string RfcSecretSha256 = "12345678901234567890123456789012";
+        private const string RfcSecretSha512 = "1234567890123456789012345678901234567890123456789012345678901234";
+
+        //         Algorithm|     Secret     |  Timestamp | Expected  OTP
+        [InlineData("SHA1", RfcSecretSha1, 59, "94287082")]
+        [InlineData("SHA256", RfcSecretSha256, 59, "46119246")]
+        [InlineData("SHA512", RfcSecretSha512, 59, "90693936")]
+        [InlineData("SHA1", RfcSecretSha1, 1111111109, "07081804")]
+        [InlineData("SHA256", RfcSecretSha256, 1111111109, "68084774")]
+        [InlineData("SHA512", RfcSecretSha512, 1111111109, "25091201")]
+        [InlineData("SHA1", RfcSecretSha1, 1111111111, "14050471")]
+        [InlineData("SHA256", RfcSecretSha256, 1111111111, "67062674")]
+        [InlineData("SHA512", RfcSecretSha512, 1111111111, "99943326")]
+        [InlineData("SHA1", RfcSecretSha1, 1234567890, "89005924")]
+        [InlineData("SHA256", RfcSecretSha256, 1234567890, "91819424")]
+        [InlineData("SHA512", RfcSecretSha512, 1234567890, "93441116")]
+        [InlineData("SHA1", RfcSecretSha1, 2000000000, "69279037")]
+        [InlineData("SHA256", RfcSecretSha256, 2000000000, "90698825")]
+        [InlineData("SHA512", RfcSecretSha512, 2000000000, "38618901")]
+        [InlineData("SHA1", RfcSecretSha1, 20000000000, "65353130")]
+        [InlineData("SHA256", RfcSecretSha256, 20000000000, "77737706")]
+        [InlineData("SHA512", RfcSecretSha512, 20000000000, "47863826")]
+        [Theory]
+        public static void TimeBasedAuthenticatorAccountRfcTestVectors(string hashAlgorithmName, string secret, long timestamp, string expectedResult)
+        {
+            var account = new TimeBasedAuthenticatorAccount() 
+            { 
+                Issuer = "OneTimePassword",
+                HashAlgorithm = new HashAlgorithmName(hashAlgorithmName), 
+                Secret = Encoding.ASCII.GetBytes(secret),
+                PasswordLength = 8
+            };
+           Assert.Equal(expectedResult, account.GeneratePassword(DateTimeOffset.FromUnixTimeSeconds(timestamp)).Password);           
+        }
+
+        //        Algorithm| Secret | Counter | Expected  OTP
+        [InlineData("SHA1", RfcSecretSha1, 0, "755224")]
+        [InlineData("SHA1", RfcSecretSha1, 1, "287082")]
+        [InlineData("SHA1", RfcSecretSha1, 2, "359152")]
+        [InlineData("SHA1", RfcSecretSha1, 3, "969429")]
+        [InlineData("SHA1", RfcSecretSha1, 4, "338314")]
+        [InlineData("SHA1", RfcSecretSha1, 5, "254676")]
+        [InlineData("SHA1", RfcSecretSha1, 6, "287922")]
+        [InlineData("SHA1", RfcSecretSha1, 7, "162583")]
+        [InlineData("SHA1", RfcSecretSha1, 8, "399871")]
+        [InlineData("SHA1", RfcSecretSha1, 9, "520489")]
+        [Theory]
+        public static void CounterBasedAuthenticatorAccountRfcTestVectors(string hashAlgorithmName, string secret, ulong counter, string expectedResult)
+        {
+            var account = new CounterBasedAuthenticatorAccount()
+            {
+                Issuer = "OneTimePassword",
+                HashAlgorithm = new HashAlgorithmName(hashAlgorithmName),
+                Secret = Encoding.ASCII.GetBytes(secret),
+                Counter = BitConverter.GetBytes(counter)
+            };
+            Assert.Equal(expectedResult, account.GeneratePassword().Password);
+        }
+
         [Fact]
         public static void ParseValidTotpUri()
         {
@@ -213,7 +274,7 @@ namespace OneTimePassword.Tests
         [Fact]
         public static void ToStringTimeBasedAuthenticatorAccount()
         {
-            var uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example";
+            const string uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example";
             var account = new TimeBasedAuthenticatorAccount()
             {
                 Secret = Base32Encoding.GetBytes("JBSWY3DPEHPK3PXP"),
@@ -226,7 +287,7 @@ namespace OneTimePassword.Tests
         [Fact]
         public static void ToStringTimeBasedAuthenticatorAccountWithSha256()
         {
-            var uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&algorithm=sha2&issuer=Example";
+            const string uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&algorithm=sha2&issuer=Example";
             var account = new TimeBasedAuthenticatorAccount()
             {
                 Secret = Base32Encoding.GetBytes("JBSWY3DPEHPK3PXP"),
@@ -240,7 +301,7 @@ namespace OneTimePassword.Tests
         [Fact]
         public static void ToStringTimeBasedAuthenticatorAccountWithSha512()
         {
-            var uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&algorithm=sha512&issuer=Example";
+            const string uri = "otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&algorithm=sha512&issuer=Example";
             var account = new TimeBasedAuthenticatorAccount()
             {
                 Secret = Base32Encoding.GetBytes("JBSWY3DPEHPK3PXP"),
